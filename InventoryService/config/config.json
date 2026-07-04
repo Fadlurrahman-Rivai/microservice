@@ -1,0 +1,17 @@
+{
+  "service_name": "InventoryService",
+  "service_port": 8003,
+  "log_file": "logs/inventory_service.log",
+  "database": {
+    "host": "127.0.0.1",
+    "port": 33060,
+    "username": "root",
+    "password": "root",
+    "database_name": "InventoryDB"
+  },
+  "service_urls": {
+    "product_service": "http://127.0.0.1:8001",
+    "cart_service": "http://127.0.0.1:8002",
+    "payment_service": "http://127.0.0.1:8004"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "service_name": "ProductService",
+  "service_port": 8001,
+  "log_file": "logs/product_service.log",
+  "database": {
+    "host": "127.0.0.1",
+    "port": 33060,
+    "username": "root",
+    "password": "root",
+    "database_name": "ProductDB"
+  },
+  "service_urls": {
+    "cart_service": "http://127.0.0.1:8002",
+    "inventory_service": "http://127.0.0.1:8003",
+    "payment_service": "http://127.0.0.1:8004"
+  }
+}
