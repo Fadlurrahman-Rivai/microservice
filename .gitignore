@@ -1,5 +1,5 @@
-# Environment variables (berisi password – jangan di-commit)
-.env
+# Environment variables (uncomment baris berikut jika repo publik)
+# .env
 
 # Docker volumes & data
 data/
