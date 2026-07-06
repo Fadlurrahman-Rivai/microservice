@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketPlace – Daftar Produk</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand" href="index.html"><i class="bi bi-shop-window me-2"></i>MarketPlace</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Beranda</a></li>
+        <li class="nav-item"><a class="nav-link" href="products.html"><i class="bi bi-grid me-1"></i>Produk</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="cart.html">
+            <i class="bi bi-cart3 me-1"></i>Keranjang
+            <span class="cart-badge" style="display:none">0</span>
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="transactions.html"><i class="bi bi-receipt me-1"></i>Transaksi</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-gear me-1"></i>Admin</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="py-5">
+  <div class="container">
+
+    <div id="alert-container"></div>
+
+    <!-- ── Header + Search ──────────────────────────────────────── -->
+    <div class="row align-items-center mb-4">
+      <div class="col-md-6">
+        <h1 class="section-title mb-0">Daftar Produk</h1>
+      </div>
+      <div class="col-md-6 mt-3 mt-md-0">
+        <div class="search-wrapper">
+          <i class="bi bi-search"></i>
+          <input type="text" id="search-input" class="form-control"
+                 placeholder="Cari produk..." autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Category Filter ──────────────────────────────────────── -->
+    <div id="category-filter" class="d-flex flex-wrap gap-2 mb-4">
+      <button class="btn category-pill active" data-id="">Semua</button>
+    </div>
+
+    <!-- ── Product Grid ─────────────────────────────────────────── -->
+    <div id="product-count" class="text-muted small mb-3"></div>
+    <div id="products-row" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4"></div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container text-center">
+    <p class="mb-0 small">&copy; 2024 MarketPlace Microservices</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script>
+<script>
+'use strict';
+
+let allProducts  = [];
+let activeCategory = '';
+let searchTimer  = null;
+
+// Read URL params on load
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.has('category')) activeCategory = urlParams.get('category');
+
+// ── Load Categories ──────────────────────────────────────────────
+async function loadCategories() {
+  try {
+    const data = await apiCall(`${API.CATALOG}/categories`);
+    const bar  = document.getElementById('category-filter');
+    data.data.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'btn category-pill' + (String(cat.id_kategori) === activeCategory ? ' active' : '');
+      btn.dataset.id = cat.id_kategori;
+      btn.textContent = cat.nama_kategori;
+      btn.addEventListener('click', () => filterByCategory(String(cat.id_kategori)));
+      bar.appendChild(btn);
+    });
+    // Fix "Semua" button
+    bar.querySelector('[data-id=""]').classList.toggle('active', activeCategory === '');
+  } catch (e) {
+    showAlert('Gagal memuat kategori.', 'warning');
+  }
+}
+
+// ── Load Products ────────────────────────────────────────────────
+async function loadProducts(search = '', category = '') {
+  const row = document.getElementById('products-row');
+  showLoading('products-row');
+  document.getElementById('product-count').textContent = '';
+
+  try {
+    let url = `${API.CATALOG}/products?`;
+    if (search)   url += `search=${encodeURIComponent(search)}&`;
+    if (category) url += `category=${encodeURIComponent(category)}`;
+
+    const data = await apiCall(url);
+    allProducts  = data.data;
+    renderProducts(allProducts);
+  } catch (e) {
+    row.innerHTML = `<div class="col-12"><div class="alert alert-danger">
+      <i class="bi bi-exclamation-triangle me-2"></i>Gagal memuat produk dari Catalog Service: ${e.message}
+    </div></div>`;
+  }
+}
+
+function renderProducts(products) {
+  const row = document.getElementById('products-row');
+  const cnt = document.getElementById('product-count');
+  cnt.textContent = `Menampilkan ${products.length} produk`;
+
+  if (!products.length) {
+    row.innerHTML = `<div class="col-12 text-center py-5">
+      <i class="bi bi-search display-4 text-muted"></i>
+      <p class="mt-3 text-muted">Produk tidak ditemukan.</p>
+      <button class="btn btn-outline-primary btn-sm" onclick="filterByCategory('')">Lihat Semua Produk</button>
+    </div>`;
+    return;
+  }
+
+  row.innerHTML = '';
+  products.forEach(p => {
+    const img = p.gambar || `https://via.placeholder.com/400x300?text=${encodeURIComponent(p.nama_produk)}`;
+    row.insertAdjacentHTML('beforeend', `
+      <div class="col">
+        <div class="card product-card">
+          <a href="product-detail.html?id=${p.id_produk}">
+            <img src="${img}" class="card-img-top" alt="${p.nama_produk}"
+                 onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+          </a>
+          <div class="card-body d-flex flex-column p-3">
+            <span class="badge bg-secondary category-badge mb-1">${p.nama_kategori || ''}</span>
+            <h6 class="card-title flex-grow-1">
+              <a href="product-detail.html?id=${p.id_produk}" class="text-decoration-none text-dark">${p.nama_produk}</a>
+            </h6>
+            <div class="price-tag mb-2">${formatCurrency(p.harga)}</div>
+            <div class="d-flex gap-2">
+              <a href="product-detail.html?id=${p.id_produk}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                <i class="bi bi-eye me-1"></i>Detail
+              </a>
+              <button class="btn btn-primary btn-sm btn-add-cart"
+                data-id="${p.id_produk}" data-nama="${p.nama_produk}"
+                data-harga="${p.harga}" data-gambar="${img}"
+                title="Tambah ke keranjang">
+                <i class="bi bi-cart-plus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`);
+  });
+
+  // Attach event handlers
+  row.querySelectorAll('.btn-add-cart').forEach(btn =>
+    btn.addEventListener('click', () => handleAddToCart(btn))
+  );
+}
+
+function filterByCategory(catId) {
+  activeCategory = catId;
+  document.querySelectorAll('.category-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === catId);
+  });
+  const search = document.getElementById('search-input').value.trim();
+  loadProducts(search, catId);
+}
+
+// ── Add to Cart ──────────────────────────────────────────────────
+async function handleAddToCart(btn) {
+  btn.disabled = true;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+  try {
+    await apiCall(`${API.CART}/cart/add`, {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: USER_ID,
+        id_produk: btn.dataset.id,
+        nama_produk: btn.dataset.nama,
+        harga: btn.dataset.harga,
+        jumlah: 1,
+        gambar: btn.dataset.gambar,
+      }),
+    });
+    btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+    btn.classList.replace('btn-primary', 'btn-success');
+    showAlert(`<i class="bi bi-check-circle me-1"></i><b>${btn.dataset.nama}</b> ditambahkan ke keranjang!`, 'success');
+    refreshCartBadge();
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.replace('btn-success', 'btn-primary'); btn.disabled = false; }, 2000);
+  } catch (e) {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    showAlert('Gagal menambahkan ke keranjang: ' + e.message, 'danger');
+  }
+}
+
+// ── Search ───────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadProducts(e.target.value.trim(), activeCategory), 400);
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+loadCategories();
+loadProducts('', activeCategory);
+</script>
+</body>
+</html>
