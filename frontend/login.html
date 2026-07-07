@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketPlace – Login</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,.2);
+      border: none;
+    }
+    .login-card .card-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 1rem 1rem 0 0;
+      border: none;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .login-card .card-header h3 {
+      color: white;
+      margin: 0;
+      font-weight: 700;
+    }
+    .login-card .card-header p {
+      color: rgba(255,255,255,.8);
+      margin: .5rem 0 0 0;
+      font-size: .95rem;
+    }
+    .login-form {
+      padding: 2rem;
+    }
+    .form-control {
+      border-radius: .5rem;
+      border: 1px solid #e0e0e0;
+      padding: .75rem 1rem;
+    }
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .btn-login {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      padding: .75rem;
+      font-weight: 600;
+      border-radius: .5rem;
+    }
+    .btn-login:hover {
+      background: linear-gradient(135deg, #5568d3 0%, #69428f 100%);
+      color: white;
+    }
+    .footer-link {
+      font-size: .9rem;
+      color: #666;
+    }
+    .footer-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer-link a:hover {
+      text-decoration: underline;
+    }
+    .alert {
+      border-radius: .5rem;
+      border: none;
+    }
+    .auth-toggle .btn {
+      border-radius: .5rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card card">
+  <div class="card-header">
+    <h3><i class="bi bi-shop-window me-2"></i>MarketPlace</h3>
+    <p>Masuk ke akun Anda</p>
+  </div>
+  
+  <div class="login-form">
+    <div id="alert-container"></div>
+
+    <div class="auth-toggle btn-group w-100 mb-3" role="group" aria-label="Pilih mode autentikasi">
+      <button type="button" class="btn btn-primary" id="btnModeLogin" onclick="switchAuthMode('login')">Login</button>
+      <button type="button" class="btn btn-outline-primary" id="btnModeRegister" onclick="switchAuthMode('register')">Registrasi</button>
+    </div>
+    
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="mb-3">
+        <label for="username" class="form-label fw-semibold">Username</label>
+        <input type="text" class="form-control" id="username" 
+               placeholder="Masukkan username" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+">
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label fw-semibold">Password</label>
+        <input type="password" class="form-control" id="password" 
+               placeholder="Masukkan password" required>
+      </div>
+
+      <div class="mb-3 d-none" id="confirmPasswordGroup">
+        <label for="confirmPassword" class="form-label fw-semibold">Konfirmasi Password</label>
+        <input type="password" class="form-control" id="confirmPassword"
+               placeholder="Ulangi password">
+      </div>
+
+      <button type="submit" class="btn btn-login w-100 text-white" id="submitBtn">
+        <i class="bi bi-box-arrow-in-right me-2"></i><span id="submitBtnText">Login</span>
+      </button>
+    </form>
+
+    <div class="text-center mt-4 footer-link">
+      <p class="mb-0" id="helperText">Pengunjung baru? Klik tombol Registrasi di atas.</p>
+    </div>
+
+    <hr class="my-3">
+
+    <div class="alert alert-info alert-sm mb-0">
+      <small class="text-muted">
+        <strong>Demo Admin:</strong> Username: <code>admin</code>, Password: <code>admin</code>
+      </small>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+  const PAYMENT_API = 'http://localhost:8004';
+  let authMode = 'login';
+
+  // Cek apakah user sudah login
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      window.location.href = 'index.html';
+    }
+  });
+
+  function switchAuthMode(mode) {
+    authMode = mode;
+    const isRegister = mode === 'register';
+
+    document.getElementById('confirmPasswordGroup').classList.toggle('d-none', !isRegister);
+    document.getElementById('btnModeLogin').className = isRegister ? 'btn btn-outline-primary' : 'btn btn-primary';
+    document.getElementById('btnModeRegister').className = isRegister ? 'btn btn-primary' : 'btn btn-outline-primary';
+    document.getElementById('submitBtnText').textContent = isRegister ? 'Registrasi' : 'Login';
+    document.getElementById('helperText').textContent = isRegister
+      ? 'Sudah punya akun? Kembali ke mode Login.'
+      : 'Pengunjung baru? Klik tombol Registrasi di atas.';
+  }
+
+  async function parseApiError(response) {
+    try {
+      const body = await response.json();
+      return body.error || `HTTP ${response.status}`;
+    } catch (_) {
+      return `HTTP ${response.status}`;
+    }
+  }
+
+  function showAuthAlert(message, type = 'danger') {
+    const alertContainer = document.getElementById('alert-container');
+    alertContainer.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (authMode === 'login' && username === 'admin' && password === 'admin') {
+      // Login sebagai admin
+      const user = {
+        role: 'admin',
+        username: 'admin',
+        id: 0
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+      window.location.href = 'admin.html';
+      return;
+    }
+
+    try {
+      if (authMode === 'register') {
+        if (password !== confirmPassword) {
+          showAuthAlert('<strong>Registrasi Gagal!</strong> Konfirmasi password tidak cocok.');
+          return;
+        }
+
+        const registerResponse = await fetch(`${PAYMENT_API}/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (!registerResponse.ok) {
+          const msg = await parseApiError(registerResponse);
+          showAuthAlert(`<strong>Registrasi Gagal!</strong> ${msg}`);
+          return;
+        }
+
+        showAuthAlert('<strong>Registrasi Berhasil!</strong> Silakan login menggunakan akun baru Anda.', 'success');
+        document.getElementById('password').value = '';
+        document.getElementById('confirmPassword').value = '';
+        switchAuthMode('login');
+        return;
+      }
+
+      const loginResponse = await fetch(`${PAYMENT_API}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!loginResponse.ok) {
+        const msg = await parseApiError(loginResponse);
+        showAuthAlert(`<strong>Login Gagal!</strong> ${msg}`);
+        return;
+      }
+
+      const data = await loginResponse.json();
+      const user = {
+        role: data.data.role || 'visitor',
+        username: data.data.username,
+        id: data.data.id_user
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+      window.location.href = 'index.html';
+    } catch (_) {
+      showAuthAlert('<strong>Gagal terhubung ke server autentikasi.</strong> Coba lagi beberapa saat.');
+    }
+  }
+</script>
+
+</body>
+</html>

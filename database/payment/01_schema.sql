@@ -9,6 +9,18 @@ CREATE DATABASE IF NOT EXISTS payment_db
 
 USE payment_db;
 
+-- ── Tabel Users (Autentikasi Pengunjung) ────────────────────────
+CREATE TABLE IF NOT EXISTS users (
+  id_user        INT UNSIGNED      NOT NULL AUTO_INCREMENT,
+  username       VARCHAR(100)      NOT NULL,
+  password_hash  VARCHAR(255)      NOT NULL,
+  role           ENUM('visitor','admin') NOT NULL DEFAULT 'visitor',
+  created_at     TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_user),
+  UNIQUE KEY uq_users_username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ── Tabel Transaksi ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS transaksi (
   id_transaksi  INT UNSIGNED      NOT NULL AUTO_INCREMENT,

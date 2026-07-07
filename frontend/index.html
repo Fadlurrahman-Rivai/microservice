@@ -27,9 +27,9 @@
             <span class="cart-badge" style="display:none">0</span>
           </a>
         </li>
-        <li class="nav-item"><a class="nav-link" href="transactions.html"><i class="bi bi-receipt me-1"></i>Transaksi</a></li>
-        <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-gear me-1"></i>Admin</a></li>
+        <li class="nav-item" id="admin-menu"><a class="nav-link" href="admin.html"><i class="bi bi-gear me-1"></i>Admin</a></li>
       </ul>
+      <div class="ms-3 d-flex justify-content-end" id="user-info-container"></div>
     </div>
   </div>
 </nav>
@@ -89,7 +89,6 @@
           <li><a href="index.html">Beranda</a></li>
           <li><a href="products.html">Produk</a></li>
           <li><a href="cart.html">Keranjang</a></li>
-          <li><a href="transactions.html">Transaksi</a></li>
         </ul>
       </div>
       <div class="col-md-4 mb-3">
@@ -108,7 +107,8 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/config.js"></script>
+<script src="js/config.js?v=20260707"></script>
+<script src="js/auth.js"></script>
 <script>
 'use strict';
 
@@ -148,15 +148,29 @@ async function loadLatestProducts() {
   const row = document.getElementById('products-row');
   showLoading('products-row', 'Memuat produk terbaru...');
   try {
-    const data = await apiCall(`${API.CATALOG}/products`);
-    const products = data.data.slice(0, 8);
+    // Ambil produk dan stok secara paralel
+    const [prodResult, stockResult] = await Promise.allSettled([
+      apiCall(`${API.CATALOG}/products`),
+      apiCall(`${API.INVENTORY}/stock`),
+    ]);
+
+    if (prodResult.status === 'rejected') throw prodResult.reason;
+    const products = prodResult.value.data.slice(0, 8);
+
+    // Buat peta stok: { id_produk: jumlah }
+    const stockMap = {};
+    if (stockResult.status === 'fulfilled') {
+      stockResult.value.data.forEach(s => { stockMap[s.id_produk] = parseInt(s.jumlah); });
+    }
+
     row.innerHTML = '';
     if (!products.length) {
       row.innerHTML = '<div class="col-12 text-center text-muted py-4">Belum ada produk.</div>';
       return;
     }
     products.forEach(p => {
-      row.insertAdjacentHTML('beforeend', buildProductCard(p));
+      const stok = stockMap[p.id_produk] !== undefined ? stockMap[p.id_produk] : null;
+      row.insertAdjacentHTML('beforeend', buildProductCard(p, stok));
     });
     // Attach add-to-cart handlers
     row.querySelectorAll('.btn-add-cart').forEach(btn => {
@@ -167,8 +181,10 @@ async function loadLatestProducts() {
   }
 }
 
-function buildProductCard(p) {
-  const img = p.gambar || `https://via.placeholder.com/400x300?text=${encodeURIComponent(p.nama_produk)}`;
+function buildProductCard(p, stok = null) {
+  const img         = p.gambar || `https://via.placeholder.com/400x300?text=${encodeURIComponent(p.nama_produk)}`;
+  const stockBadge  = buildStockBadge(stok);
+  const addDisabled = stok === 0 ? 'disabled' : '';
   return `
     <div class="col">
       <div class="card product-card">
@@ -182,11 +198,13 @@ function buildProductCard(p) {
             <a href="product-detail.html?id=${p.id_produk}" class="text-decoration-none text-dark">${p.nama_produk}</a>
           </h6>
           <div class="price-tag mb-2">${formatCurrency(p.harga)}</div>
+          ${stockBadge ? `<div class="mb-2">${stockBadge}</div>` : ''}
           <div class="d-flex gap-2">
             <a href="product-detail.html?id=${p.id_produk}" class="btn btn-outline-primary btn-sm flex-grow-1">Detail</a>
-            <button class="btn btn-primary btn-sm btn-add-cart"
+            <button class="btn btn-primary btn-sm btn-add-cart ${addDisabled}"
               data-id="${p.id_produk}" data-nama="${p.nama_produk}"
-              data-harga="${p.harga}" data-gambar="${img}">
+              data-harga="${p.harga}" data-gambar="${img}"
+              title="${stok === 0 ? 'Stok habis' : 'Tambah ke keranjang'}">
               <i class="bi bi-cart-plus"></i>
             </button>
           </div>

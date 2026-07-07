@@ -3,6 +3,8 @@
  * Payment Service – Front Controller
  *
  * Endpoints:
+ *   POST /auth/register       – Registrasi akun pengunjung
+ *   POST /auth/login          – Login akun pengunjung
  *   POST /payment             – Proses pembayaran (checkout)
  *   GET  /payment/{id}        – Detail transaksi berdasarkan ID
  *   GET  /transactions        – Riwayat transaksi (?user_id=1)
@@ -28,10 +30,15 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 $resource = $parts[0] ?? '';
 $id       = (isset($parts[1]) && ctype_digit($parts[1])) ? (int)$parts[1] : null;
+$action   = $parts[1] ?? null;
 
 require_once __DIR__ . '/config/database.php';
 
 switch ($resource) {
+    case 'auth':
+        require_once __DIR__ . '/api/auth.php';
+        handleAuth($pdo, $method, $action);
+        break;
     case 'payment':
         require_once __DIR__ . '/api/payment.php';
         handlePayment($pdo, $method, $id);

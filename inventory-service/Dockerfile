@@ -1,6 +1,6 @@
 FROM php:8.1-apache
 RUN docker-php-ext-install pdo pdo_mysql \
-    && a2enmod rewrite
+    && a2enmod rewrite headers
 COPY apache.conf /etc/apache2/sites-available/000-default.conf
 COPY . /var/www/html/
 RUN rm -f /var/www/html/apache.conf \

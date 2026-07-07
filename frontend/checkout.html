@@ -26,9 +26,9 @@
             <span class="cart-badge" style="display:none">0</span>
           </a>
         </li>
-        <li class="nav-item"><a class="nav-link" href="transactions.html"><i class="bi bi-receipt me-1"></i>Transaksi</a></li>
-        <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-gear me-1"></i>Admin</a></li>
+        <li class="nav-item" id="admin-menu"><a class="nav-link" href="admin.html"><i class="bi bi-gear me-1"></i>Admin</a></li>
       </ul>
+      <div class="ms-3 d-flex justify-content-end" id="user-info-container"></div>
     </div>
   </div>
 </nav>
@@ -66,7 +66,9 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js?v=20260707"></script>
+<script src="js/auth.js"></script>
 <script>
 'use strict';
 
@@ -292,6 +294,12 @@ function showPaymentServiceDown() {
 }
 
 function showSuccessPage(transId, nama, metode) {
+  const transaksiButton = isAdmin()
+    ? `<a href="admin.html" class="btn btn-primary btn-lg">
+          <i class="bi bi-gear me-2"></i>Buka Admin Panel
+        </a>`
+    : '';
+
   document.getElementById('checkout-body').innerHTML = `
     <div class="col-12 text-center py-4">
       <div class="mb-4">
@@ -315,9 +323,7 @@ function showSuccessPage(transId, nama, metode) {
         </dl>
       </div>
       <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="transactions.html" class="btn btn-primary btn-lg">
-          <i class="bi bi-receipt me-2"></i>Lihat Transaksi
-        </a>
+        ${transaksiButton}
         <a href="products.html" class="btn btn-outline-secondary btn-lg">
           <i class="bi bi-bag me-2"></i>Belanja Lagi
         </a>

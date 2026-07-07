@@ -154,6 +154,164 @@ docker compose down -v   # Hapus volume (data DB ikut terhapus)
 
 ---
 
+## Sistem Login & Autentikasi
+
+Aplikasi marketplace menggunakan sistem login dengan role-based access control untuk membedakan hak akses antara **Admin** dan **Pengunjung**.
+
+### 📌 Halaman Login
+
+**URL:** `http://localhost:8080/login.html`
+
+Halaman login menyediakan dua opsi:
+
+#### 1. **Login sebagai Admin**
+
+Untuk mengakses Admin Panel dan mengelola produk, kategori, serta stok:
+
+- **Username:** `admin`
+- **Password:** `admin`
+- **Hak Akses:**
+  - ✅ Kelola Produk (tambah, edit, hapus)
+  - ✅ Kelola Kategori (tambah, edit, hapus)
+  - ✅ **Kelola Stok Barang** (tambah, kurangi, set jumlah stok)
+  - ✅ Lihat real-time stock updates
+  - ✅ Akses ke menu "Admin" di navbar
+
+**Alur Login Admin:**
+```
+1. Buka http://localhost:8080/login.html
+2. Masukkan Username: admin
+3. Masukkan Password: admin
+4. Klik tombol "Login"
+5. Akan diarahkan ke halaman Admin Panel (admin.html)
+```
+
+#### 2. **Registrasi & Login sebagai Pengunjung**
+
+Untuk browsing produk dan belanja dengan akun pengunjung:
+
+- **Cara Registrasi:** Buka `login.html` lalu pilih tab **Registrasi**
+- **Format Username:** 3-30 karakter (huruf, angka, underscore)
+- **Format Password:** bebas
+- **Cara Login:** Setelah registrasi, kembali ke tab **Login** lalu masuk dengan akun yang dibuat
+- **Hak Akses:**
+  - ✅ Lihat daftar produk
+  - ✅ Cari dan filter produk
+  - ✅ Lihat detail produk
+  - ✅ Lihat stok produk
+  - ✅ Tambah produk ke keranjang
+  - ✅ Update keranjang
+  - ✅ Checkout dan bayar
+  - ❌ Lihat riwayat transaksi (khusus admin melalui Admin Panel)
+  - ❌ Akses Admin Panel (tersembunyi)
+  - ❌ Kelola produk/kategori/stok
+
+**Alur Registrasi & Login Pengunjung:**
+```
+1. Buka http://localhost:8080/login.html
+2. Pilih tab "Registrasi"
+3. Isi username + password, lalu submit
+4. Setelah berhasil, pilih tab "Login"
+5. Login dengan akun yang baru dibuat
+6. Akan diarahkan ke halaman utama (index.html)
+```
+
+### 🚪 Logout
+
+Setelah login, user akan melihat navbar dengan informasi:
+- **Badge Role:** Menampilkan "Admin" (merah) atau "Pengunjung" (hijau)
+- **Username:** Nama user yang sedang login
+- **Tombol Logout:** Untuk keluar dari akun
+
+**Cara Logout:**
+```
+1. Klik tombol "Logout" di navbar
+2. Akan muncul konfirmasi
+3. Klik "OK" untuk konfirmasi logout
+4. Akan diarahkan ke halaman login
+5. Data keranjang akan dihapus otomatis
+```
+
+### 📋 Perbandingan Fitur Admin vs Pengunjung
+
+| Fitur | Admin | Pengunjung |
+|-------|-------|-----------|
+| Lihat Produk | ✅ | ✅ |
+| Cari Produk | ✅ | ✅ |
+| Detail Produk | ✅ | ✅ |
+| Tambah Ke Keranjang | ✅ | ✅ |
+| Checkout | ✅ | ✅ |
+| Lihat Transaksi | ✅ | ❌ |
+| **Kelola Produk** | **✅** | **❌** |
+| **Kelola Kategori** | **✅** | **❌** |
+| **Kelola Stok Barang** | **✅** | **❌** |
+| **Akses Admin Panel** | **✅** | **❌** |
+
+### 🔒 Proteksi Akses
+
+- **Admin Panel** dilindungi dengan autentikasi
+- Jika pengunjung mencoba akses `/admin.html`, akan diarahkan ke halaman utama dengan pesan error
+- Menu "Admin" di navbar otomatis disembunyikan untuk pengunjung
+- Data user disimpan di `localStorage` browser
+
+### 🛠️ Admin Panel Features
+
+**URL:** `http://localhost:8080/admin.html` (hanya untuk admin)
+
+#### Manajemen Produk
+- Lihat daftar semua produk
+- Cari produk berdasarkan nama/deskripsi
+- Filter produk per kategori
+- Tambah produk baru dengan form lengkap
+- Edit produk yang sudah ada
+- Hapus produk
+- Preview gambar produk
+
+#### Manajemen Kategori
+- Lihat daftar semua kategori
+- Tambah kategori baru
+- Edit nama kategori
+- Hapus kategori
+- Lihat jumlah produk per kategori
+
+#### **Manajemen Stok Barang** ⭐
+- Lihat stok semua produk
+- Update stok dengan operasi:
+  - **Set:** Ganti stok ke jumlah tertentu
+  - **Add:** Tambah stok
+  - **Subtract:** Kurangi stok
+- Real-time stock updates (SSE live indicator)
+- Tampilan badge stok (Habis/Terbatas/Tersedia)
+
+### 💾 Penyimpanan Data User
+
+Data user disimpan di browser's `localStorage` dengan format:
+```json
+{
+  "role": "admin|visitor",
+  "username": "admin|<username_pengunjung>",
+  "id": 0 atau id_user database
+}
+```
+
+Data akan terhapus otomatis saat:
+- User melakukan logout
+- Browser ditutup (session berakhir)
+- localStorage dihapus manual
+
+### ⚠️ Catatan Keamanan
+
+- Implementasi login ini adalah untuk **demo/pembelajaran**
+- Password pengunjung di-hash di backend, namun belum menggunakan token/session (bukan production-ready)
+- Untuk **production deployment**, gunakan:
+  - Backend authentication dengan JWT token
+  - HTTPS untuk enkripsi data
+  - Password hashing (bcrypt, Argon2)
+  - Session-based authentication
+  - CSRF protection
+
+---
+
 ## REST API Documentation
 
 ### Catalog Service (`:8001`)

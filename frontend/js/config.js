@@ -14,8 +14,15 @@ const API = {
     PAYMENT:   'http://localhost:8004',
 };
 
-// Simulasi user ID (tanpa autentikasi)
-const USER_ID = 1;
+// Ambil user ID dari localStorage (dari auth.js), default ke 1 jika belum login
+const USER_ID = (() => {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        return user && user.id ? user.id : 1;
+    } catch (e) {
+        return 1;
+    }
+})();
 
 // ── HTTP Helper ───────────────────────────────────────────────────
 /**
@@ -62,6 +69,18 @@ function formatDate(dateStr) {
     return new Date(dateStr).toLocaleString('id-ID', {
         dateStyle: 'medium', timeStyle: 'short',
     });
+}
+
+// ── Stock Badge ───────────────────────────────────────────────────
+/**
+ * Hasilkan HTML badge stok untuk kartu produk.
+ * @param {number|null} stok  null = data tidak tersedia
+ */
+function buildStockBadge(stok) {
+    if (stok === null || stok === undefined) return '';
+    if (stok === 0)  return '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Stok Habis</span>';
+    if (stok <= 5)   return `<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Tersisa ${stok}</span>`;
+    return `<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Stok: ${stok}</span>`;
 }
 
 // ── Alert Helper ──────────────────────────────────────────────────

@@ -26,13 +26,19 @@ $parts  = array_values(array_filter(explode('/', trim($uri, '/'))));
 $method = $_SERVER['REQUEST_METHOD'];
 
 $resource = $parts[0] ?? '';
+$sub      = $parts[1] ?? '';
 $id       = (isset($parts[1]) && ctype_digit($parts[1])) ? (int)$parts[1] : null;
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/api/stock.php';
 
 if ($resource === 'stock') {
-    handleStock($pdo, $method, $id);
+    if ($method === 'GET' && $sub === 'events') {
+        require_once __DIR__ . '/api/events.php';
+        handleStockEvents($pdo);
+    } else {
+        handleStock($pdo, $method, $id);
+    }
 } elseif ($resource === 'health') {
     echo json_encode(['status' => 'ok', 'service' => 'inventory-service', 'time' => date('Y-m-d H:i:s')]);
 } else {

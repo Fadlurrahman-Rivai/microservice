@@ -234,6 +234,32 @@ footer a:hover { color: #fff; }
   border-radius: 2px;
 }
 
+/* ── Real-time / SSE ──────────────────────────────────────────── */
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 50%;
+  animation: live-pulse 1.4s ease-in-out infinite;
+  vertical-align: middle;
+  margin-right: 3px;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1;  transform: scale(1);   }
+  50%       { opacity: .3; transform: scale(.65); }
+}
+
+.stock-flash {
+  animation: stock-flash-bg 2s ease-out forwards;
+}
+
+@keyframes stock-flash-bg {
+  0%   { background-color: #fff3cd; }
+  100% { background-color: transparent; }
+}
+
 /* ── Search Box ────────────────────────────────────────────────── */
 .search-wrapper {
   position: relative;
