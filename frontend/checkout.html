@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketPlace – Checkout</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand" href="index.html"><i class="bi bi-shop-window me-2"></i>MarketPlace</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Beranda</a></li>
+        <li class="nav-item"><a class="nav-link" href="products.html"><i class="bi bi-grid me-1"></i>Produk</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="cart.html">
+            <i class="bi bi-cart3 me-1"></i>Keranjang
+            <span class="cart-badge" style="display:none">0</span>
+          </a>
+        </li>
+        <li class="nav-item" id="admin-menu"><a class="nav-link" href="admin.html"><i class="bi bi-gear me-1"></i>Admin</a></li>
+      </ul>
+      <div class="ms-3 d-flex justify-content-end" id="user-info-container"></div>
+    </div>
+  </div>
+</nav>
+
+<main class="py-5">
+  <div class="container">
+
+    <div id="alert-container"></div>
+
+    <!-- Progress Steps -->
+    <div class="d-flex justify-content-center mb-5">
+      <div class="d-flex align-items-center gap-2">
+        <div class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-cart-check me-1"></i>Keranjang</div>
+        <div class="text-muted">───</div>
+        <div class="badge bg-primary rounded-pill px-3 py-2"><i class="bi bi-credit-card me-1"></i>Checkout</div>
+        <div class="text-muted">───</div>
+        <div class="badge bg-secondary rounded-pill px-3 py-2"><i class="bi bi-check-circle me-1"></i>Selesai</div>
+      </div>
+    </div>
+
+    <div id="checkout-body" class="row g-4">
+      <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-muted">Memuat data keranjang...</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container text-center">
+    <p class="mb-0 small">&copy; 2024 MarketPlace Microservices</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js?v=20260707"></script>
+<script src="js/auth.js"></script>
+<script>
+'use strict';
+
+let cartItems = [];
+let cartTotal = 0;
+
+async function initCheckout() {
+  const body = document.getElementById('checkout-body');
+  try {
+    const data = await apiCall(`${API.CART}/cart?user_id=${USER_ID}`);
+    cartItems = data.data.items;
+    cartTotal = data.data.total;
+    updateCartBadge(data.data.item_count);
+
+    if (!cartItems.length) {
+      body.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="bi bi-cart-x display-3 text-muted"></i>
+          <h4 class="mt-3 text-muted">Keranjang kosong</h4>
+          <a href="products.html" class="btn btn-primary mt-2">Mulai Belanja</a>
+        </div>`;
+      return;
+    }
+
+    renderCheckout(cartItems, cartTotal);
+  } catch (e) {
+    body.innerHTML = `<div class="col-12"><div class="alert alert-danger">Gagal memuat keranjang: ${e.message}</div></div>`;
+  }
+}
+
+function renderCheckout(items, total) {
+  const body = document.getElementById('checkout-body');
+  let itemRows = '';
+  items.forEach(item => {
+    itemRows += `
+      <tr>
+        <td>${item.nama_produk}</td>
+        <td class="text-center">${item.jumlah}x</td>
+        <td class="text-end">${formatCurrency(item.harga)}</td>
+        <td class="text-end fw-semibold">${formatCurrency(item.subtotal)}</td>
+      </tr>`;
+  });
+
+  body.innerHTML = `
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold fs-5 border-0 pt-4 pb-0">
+          <i class="bi bi-person-fill me-2 text-primary"></i>Data Pembeli
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nama Lengkap <span class="text-danger">*</span></label>
+            <input type="text" id="nama-pembeli" class="form-control form-control-lg"
+                   placeholder="Masukkan nama lengkap Anda">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Metode Pembayaran <span class="text-danger">*</span></label>
+            <select id="metode-bayar" class="form-select form-select-lg">
+              <option value="Transfer Bank">Transfer Bank</option>
+              <option value="Virtual Account">Virtual Account</option>
+              <option value="QRIS">QRIS</option>
+              <option value="COD">Bayar di Tempat (COD)</option>
+              <option value="Kartu Kredit">Kartu Kredit</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Catatan (opsional)</label>
+            <textarea id="catatan" class="form-control" rows="2"
+                      placeholder="Catatan untuk pesanan..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card order-summary-card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3"><i class="bi bi-bag-check me-2 text-primary"></i>Ringkasan Pesanan</h5>
+          <div class="table-responsive mb-3">
+            <table class="table table-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>Produk</th>
+                  <th class="text-center">Qty</th>
+                  <th class="text-end">Harga</th>
+                  <th class="text-end">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>${itemRows}</tbody>
+            </table>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <span class="fw-bold fs-5">Total Pembayaran</span>
+            <span class="fw-bold fs-4 text-price">${formatCurrency(total)}</span>
+          </div>
+          <button id="btn-pay" class="btn btn-success btn-lg w-100 fw-bold">
+            <i class="bi bi-shield-check me-2"></i>Bayar Sekarang
+          </button>
+          <a href="cart.html" class="btn btn-outline-secondary w-100 mt-2">
+            <i class="bi bi-arrow-left me-2"></i>Kembali ke Keranjang
+          </a>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('btn-pay').addEventListener('click', handlePayment);
+}
+
+async function handlePayment() {
+  const namaPembeli = document.getElementById('nama-pembeli').value.trim();
+  const metodeBayar = document.getElementById('metode-bayar').value;
+
+  if (!namaPembeli) {
+    showAlert('<i class="bi bi-exclamation-circle me-1"></i>Nama pembeli wajib diisi.', 'warning');
+    document.getElementById('nama-pembeli').focus();
+    return;
+  }
+
+  const btn = document.getElementById('btn-pay');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses Pembayaran...';
+
+  // Hide previous alerts
+  document.getElementById('alert-container').innerHTML = '';
+
+  try {
+    // ── STEP 1: Proses pembayaran ke Payment Service ──────────────
+    const paymentPayload = {
+      user_id: USER_ID,
+      nama_pembeli: namaPembeli,
+      metode_bayar: metodeBayar,
+      total: cartTotal,
+      items: cartItems.map(i => ({
+        id_produk:   i.id_produk,
+        nama_produk: i.nama_produk,
+        harga:       i.harga,
+        jumlah:      i.jumlah,
+      })),
+    };
+
+    const payResult = await apiCall(`${API.PAYMENT}/payment`, {
+      method: 'POST',
+      body: JSON.stringify(paymentPayload),
+    });
+
+    const transId = payResult.id_transaksi;
+
+    // ── STEP 2: Kurangi stok di Inventory Service ─────────────────
+    const stockUpdates = cartItems.map(item =>
+      apiCall(`${API.INVENTORY}/stock/${item.id_produk}`, {
+        method: 'PUT',
+        body: JSON.stringify({ jumlah: item.jumlah, operasi: 'subtract' }),
+      }).catch(err => ({ error: err.message, id_produk: item.id_produk }))
+    );
+    const stockResults = await Promise.all(stockUpdates);
+    const stockErrors  = stockResults.filter(r => r && r.error);
+    if (stockErrors.length) {
+      console.warn('Beberapa stok gagal dikurangi:', stockErrors);
+    }
+
+    // ── STEP 3: Kosongkan keranjang ───────────────────────────────
+    await apiCall(`${API.CART}/cart/clear`, {
+      method: 'DELETE',
+      body: JSON.stringify({ user_id: USER_ID }),
+    }).catch(() => {}); // Tidak kritis jika gagal
+
+    updateCartBadge(0);
+
+    // ── STEP 4: Tampilkan sukses & redirect ───────────────────────
+    showSuccessPage(transId, namaPembeli, metodeBayar);
+
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-shield-check me-2"></i>Bayar Sekarang';
+
+    // Deteksi apakah Payment Service mati (TypeError = network error)
+    if (e instanceof TypeError || e.message.toLowerCase().includes('failed to fetch')
+        || e.message.toLowerCase().includes('network')) {
+      showPaymentServiceDown();
+    } else {
+      showAlert(
+        `<i class="bi bi-x-circle me-2"></i><strong>Pembayaran gagal:</strong> ${e.message}`,
+        'danger'
+      );
+    }
+  }
+}
+
+function showPaymentServiceDown() {
+  const body = document.getElementById('checkout-body');
+  // Keep the form but show banner below
+  const existing = document.getElementById('service-down-banner');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'service-down-banner';
+  banner.className = 'col-12';
+  banner.innerHTML = `
+    <div class="service-down-banner mt-3">
+      <i class="bi bi-exclamation-triangle-fill display-5 mb-3"></i>
+      <h4 class="fw-bold">Layanan Pembayaran Tidak Tersedia</h4>
+      <p class="mb-3 opacity-75">
+        Maaf, layanan pembayaran sedang mengalami gangguan.<br>
+        Silakan coba kembali beberapa saat lagi.
+      </p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <button class="btn btn-light fw-semibold" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise me-2"></i>Coba Lagi
+        </button>
+        <a href="cart.html" class="btn btn-outline-light">
+          <i class="bi bi-cart me-2"></i>Kembali ke Keranjang
+        </a>
+      </div>
+      <hr class="border-light opacity-25 my-3">
+      <p class="small opacity-50 mb-0">
+        Catalog, Cart, dan Inventory Service tetap berjalan normal.
+        Anda masih dapat melihat produk dan mengelola keranjang belanja.
+      </p>
+    </div>`;
+  body.insertAdjacentElement('beforeend', banner);
+  banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function showSuccessPage(transId, nama, metode) {
+  const transaksiButton = isAdmin()
+    ? `<a href="admin.html" class="btn btn-primary btn-lg">
+          <i class="bi bi-gear me-2"></i>Buka Admin Panel
+        </a>`
+    : '';
+
+  document.getElementById('checkout-body').innerHTML = `
+    <div class="col-12 text-center py-4">
+      <div class="mb-4">
+        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+             style="width:100px;height:100px;font-size:3rem">
+          <i class="bi bi-check-lg"></i>
+        </div>
+      </div>
+      <h2 class="fw-bold text-success mb-2">Pembayaran Berhasil!</h2>
+      <p class="text-muted mb-4">Terima kasih, <strong>${nama}</strong>. Pesanan Anda sedang diproses.</p>
+      <div class="card border-0 shadow-sm d-inline-block text-start px-4 py-3 mb-4">
+        <dl class="row mb-0">
+          <dt class="col-sm-5 text-muted">ID Transaksi</dt>
+          <dd class="col-sm-7 fw-bold">#${transId}</dd>
+          <dt class="col-sm-5 text-muted">Metode Bayar</dt>
+          <dd class="col-sm-7">${metode}</dd>
+          <dt class="col-sm-5 text-muted">Total</dt>
+          <dd class="col-sm-7 fw-bold text-price">${formatCurrency(cartTotal)}</dd>
+          <dt class="col-sm-5 text-muted">Status</dt>
+          <dd class="col-sm-7"><span class="badge bg-success">PAID</span></dd>
+        </dl>
+      </div>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        ${transaksiButton}
+        <a href="products.html" class="btn btn-outline-secondary btn-lg">
+          <i class="bi bi-bag me-2"></i>Belanja Lagi
+        </a>
+      </div>
+    </div>`;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+initCheckout();
+</script>
+</body>
+</html>

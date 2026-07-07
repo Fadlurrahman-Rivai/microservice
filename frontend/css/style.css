@@ -1,0 +1,282 @@
+/* ─────────────────────────────────────────────────────────────────
+   MarketPlace – Custom Styles (Bootstrap 5 overrides + extras)
+   ───────────────────────────────────────────────────────────────── */
+
+:root {
+  --mp-primary:   #0d6efd;
+  --mp-secondary: #6c757d;
+  --mp-success:   #198754;
+  --mp-danger:    #dc3545;
+  --mp-bg:        #f8f9fa;
+  --mp-card-shadow: 0 2px 12px rgba(0,0,0,.08);
+  --mp-radius: .75rem;
+}
+
+/* ── Body ──────────────────────────────────────────────────────── */
+body {
+  background-color: var(--mp-bg);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main { flex: 1; }
+
+/* ── Navbar ────────────────────────────────────────────────────── */
+.navbar-brand {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -.5px;
+}
+
+.navbar .nav-link {
+  font-weight: 500;
+  padding: .5rem .9rem;
+  border-radius: .4rem;
+  transition: background .2s;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  background: rgba(255,255,255,.15);
+}
+
+/* ── Cart Badge ────────────────────────────────────────────────── */
+.cart-badge {
+  font-size: .65rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 .25rem;
+  border-radius: 50rem;
+  background: #dc3545;
+  color: #fff;
+  vertical-align: super;
+  margin-left: 2px;
+}
+
+/* ── Hero Section ──────────────────────────────────────────────── */
+.hero-section {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 60%, #6610f2 100%);
+  color: #fff;
+  padding: 5rem 0 4rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero-section::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0; right: 0;
+  height: 60px;
+  background: var(--mp-bg);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+/* ── Product Card ──────────────────────────────────────────────── */
+.product-card {
+  border: none;
+  border-radius: var(--mp-radius);
+  box-shadow: var(--mp-card-shadow);
+  transition: transform .2s, box-shadow .2s;
+  overflow: hidden;
+  height: 100%;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.product-card .card-img-top {
+  height: 200px;
+  object-fit: cover;
+  background: #e9ecef;
+}
+.product-card .card-title {
+  font-size: .95rem;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.product-card .price-tag {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--mp-primary);
+}
+.product-card .category-badge {
+  font-size: .7rem;
+}
+
+/* ── Category Filter Pills ─────────────────────────────────────── */
+.category-pill {
+  border-radius: 50rem;
+  padding: .4rem 1rem;
+  font-size: .85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  border: 2px solid transparent;
+}
+.category-pill.active {
+  background: var(--mp-primary);
+  color: #fff;
+  border-color: var(--mp-primary);
+}
+.category-pill:not(.active) {
+  background: #fff;
+  color: var(--mp-secondary);
+  border-color: #dee2e6;
+}
+.category-pill:not(.active):hover {
+  border-color: var(--mp-primary);
+  color: var(--mp-primary);
+}
+
+/* ── Cart Table ────────────────────────────────────────────────── */
+.cart-item-img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: .5rem;
+}
+
+/* ── Checkout Summary ──────────────────────────────────────────── */
+.order-summary-card {
+  border: none;
+  border-radius: var(--mp-radius);
+  box-shadow: var(--mp-card-shadow);
+  position: sticky;
+  top: 80px;
+}
+
+/* ── Transaction Cards ─────────────────────────────────────────── */
+.transaction-card {
+  border: none;
+  border-radius: var(--mp-radius);
+  box-shadow: var(--mp-card-shadow);
+  transition: box-shadow .2s;
+  cursor: pointer;
+}
+.transaction-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,.12);
+}
+
+/* ── Status Badges ─────────────────────────────────────────────── */
+.badge-PAID     { background-color: #198754; }
+.badge-PENDING  { background-color: #ffc107; color: #333; }
+.badge-FAILED   { background-color: #dc3545; }
+.badge-CANCELLED{ background-color: #6c757d; }
+
+/* ── Quantity Controls ─────────────────────────────────────────── */
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: .375rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+.qty-input {
+  width: 50px;
+  text-align: center;
+  border-radius: .375rem;
+}
+
+/* ── Stock Badge ───────────────────────────────────────────────── */
+.stock-ok     { color: var(--mp-success); font-weight: 600; }
+.stock-low    { color: #fd7e14; font-weight: 600; }
+.stock-empty  { color: var(--mp-danger);  font-weight: 600; }
+
+/* ── Service Down Banner ───────────────────────────────────────── */
+.service-down-banner {
+  background: linear-gradient(135deg, #dc3545, #b02a37);
+  color: #fff;
+  border-radius: var(--mp-radius);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+footer {
+  background: #212529;
+  color: #adb5bd;
+  padding: 2rem 0 1.5rem;
+  margin-top: auto;
+}
+footer a { color: #6ea8fe; text-decoration: none; }
+footer a:hover { color: #fff; }
+
+/* ── Utilities ─────────────────────────────────────────────────── */
+.text-price { color: var(--mp-primary); font-weight: 700; }
+.cursor-pointer { cursor: pointer; }
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: .5rem;
+}
+.section-title::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 3rem;
+  height: 3px;
+  background: var(--mp-primary);
+  border-radius: 2px;
+}
+
+/* ── Real-time / SSE ──────────────────────────────────────────── */
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 50%;
+  animation: live-pulse 1.4s ease-in-out infinite;
+  vertical-align: middle;
+  margin-right: 3px;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1;  transform: scale(1);   }
+  50%       { opacity: .3; transform: scale(.65); }
+}
+
+.stock-flash {
+  animation: stock-flash-bg 2s ease-out forwards;
+}
+
+@keyframes stock-flash-bg {
+  0%   { background-color: #fff3cd; }
+  100% { background-color: transparent; }
+}
+
+/* ── Search Box ────────────────────────────────────────────────── */
+.search-wrapper {
+  position: relative;
+}
+.search-wrapper .bi-search {
+  position: absolute;
+  left: .9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mp-secondary);
+}
+.search-wrapper input {
+  padding-left: 2.4rem;
+}
+
+/* ── Responsive tweaks ─────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .hero-section { padding: 3rem 0 2.5rem; }
+  .product-card .card-img-top { height: 160px; }
+}

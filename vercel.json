@@ -1,0 +1,32 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/login.html",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/catalog/:path*",
+      "destination": "https://catalog-service.example.com/:path*"
+    },
+    {
+      "source": "/api/cart/:path*",
+      "destination": "https://cart-service.example.com/:path*"
+    },
+    {
+      "source": "/api/inventory/:path*",
+      "destination": "https://inventory-service.example.com/:path*"
+    },
+    {
+      "source": "/api/payment/:path*",
+      "destination": "https://payment-service.example.com/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/frontend/:path*"
+    }
+  ]
+}
