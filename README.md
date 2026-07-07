@@ -189,7 +189,6 @@ Contoh: jika endpoint catalog kamu adalah `https://catalog.myapp.com`, maka rout
 Setelah URL backend di `vercel.json` diisi, lakukan redeploy di Vercel. Frontend akan diakses dari root (`/`) dan otomatis diarahkan ke `login.html`.
 
 ---
-
 ## Sistem Login & Autentikasi
 
 Aplikasi marketplace menggunakan sistem login dengan role-based access control untuk membedakan hak akses antara **Admin** dan **Pengunjung**.
